@@ -51,7 +51,7 @@ gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol)
 	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "GOOGLE_TALK") == 0));
 }
 
-const char* plugin_get_protocol(const char* protocol_id) {
+const char* plugin_get_protocol(const char* protocol_id, const char* buddy_name) {
 	if (strcmp(protocol_id, "prpl-aim") == 0)
 		return "AIM";
 
@@ -66,6 +66,9 @@ const char* plugin_get_protocol(const char* protocol_id) {
 
 	if (strcmp(protocol_id, "prpl-icq") == 0)
 		return "ICQ";
+
+	if (strcmp(protocol_id, "prpl-jabber") == 0 && (strstr(buddy_name, "@gmail.com") || strstr(buddy_name, "@googlemail.com")))
+		return "GOOGLE_TALK";
 
 	if (strcmp(protocol_id, "prpl-jabber") == 0)
 		return "JABBER";

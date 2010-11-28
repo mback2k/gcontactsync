@@ -44,7 +44,7 @@
 #define PLUGIN_DESCRIPTION "Synchronizes meta contacts with Google Contacts."
 #define PLUGIN_AUTHOR "Marc Hörsken <info@marc-hoersken.de>"
 #define PLUGIN_WEBSITE "http://www.marc-hoersken.de/"
-//#define PLUGIN_DEBUG
+#define PLUGIN_DEBUG TRUE
 
 #define PLUGIN_PREF_ROOT1 "/plugins/core/mback2k"
 #define PLUGIN_PREF_ROOT2 "/plugins/core/mback2k/gcontactsync"

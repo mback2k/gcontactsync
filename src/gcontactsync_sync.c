@@ -21,7 +21,7 @@
 
 #include <gcontactsync_sync.h>
 
-static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontacts, GHashTable *htcontacts) {
+static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontacts) {
 	char *title, *protocol, *address;
 	const char *protocol_id, *alias;
 	GList *accounts = NULL;
@@ -47,7 +47,7 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 
 				title = gcal_contact_get_title(gcontact);
 
-#ifdef PLUGIN_DEBUG
+#if PLUGIN_DEBUG
 				purple_debug_misc(PLUGIN_ID, "G2P: contact: %d\ntitle:\t\t%s\nemail:\t%s\nupdated:\t%s\n",
 					              i, title,
 					              gcal_contact_get_email(gcontact),
@@ -58,7 +58,7 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 					protocol = gcal_contact_get_im_protocol(gcontact, j);
 					address = gcal_contact_get_im_address(gcontact, j);
 
-#ifdef PLUGIN_DEBUG
+#if PLUGIN_DEBUG
 					purple_debug_misc(PLUGIN_ID, "G2P: im: %d\nprotocol:\t%s\naddress:\t%s\n",
 						              j, protocol, address);
 #endif
@@ -81,8 +81,8 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 	}
 }
 
-static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontacts, GHashTable *htcontacts) {
-	char *title, *protocol, *address;
+static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
+	char *protocol, *address;
 	const char *protocol_id, *buddy_name, *buddy_alias;
 	GList *accounts = NULL;
 	PurpleAccount *account = NULL;
@@ -90,7 +90,7 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 	PurpleBuddy *buddy = NULL;
 	gboolean found_im = FALSE;
 	gcal_contact_t gcontact;
-	int i, j;
+	int j;
 
 	for (accounts = purple_accounts_get_all(); accounts != NULL; accounts = accounts->next) {
 		account = (PurpleAccount*)accounts->data;
@@ -108,79 +108,63 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 				buddy_name = purple_buddy_get_name(buddy);
 				buddy_alias = purple_buddy_get_alias(buddy);
 
-#ifdef PLUGIN_DEBUG
+#if PLUGIN_DEBUG
 				purple_debug_misc(PLUGIN_ID, "P2G: buddy:\nname:\t%s\nalias:\t%s\n",
 					              buddy_name, buddy_alias);
 #endif
 
-				for (i = 0; i < gcontacts.length; ++i) {
-					gcontact = gcal_contact_element(&gcontacts, i);
-					if (!gcontact)
-						break;
+				gcontact = g_hash_table_lookup(ht_gcontacts, buddy_alias);
+				if (gcontact) {
+					found_im = FALSE;
 
-					title = gcal_contact_get_title(gcontact);
-
-#ifdef PLUGIN_DEBUG
-					purple_debug_misc(PLUGIN_ID, "P2G: contact: %d\ntitle:\t\t%s\nemail:\t%s\nupdated:\t%s\n",
-						              i, title,
-						              gcal_contact_get_email(gcontact),
-						              gcal_contact_get_updated(gcontact));
+#if PLUGIN_DEBUG
+					purple_debug_misc(PLUGIN_ID, "P2G: match:\nbuddy:\t%s\ncontact:\t%s\n",
+									  buddy_name, buddy_alias);
 #endif
 
-					if (strcmp(buddy_alias, title) == 0) {
-						found_im = FALSE;
+					for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
+						protocol = gcal_contact_get_im_protocol(gcontact, j);
 
-#ifdef PLUGIN_DEBUG
-						purple_debug_misc(PLUGIN_ID, "P2G: match:\nbuddy:\t%s\ncontact:\t%s\n",
-							              buddy_name, title);
-#endif
+						if (plugin_compare_protocols(protocol_id, protocol)) {
+							address = gcal_contact_get_im_address(gcontact, j);
 
-						for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
-							protocol = gcal_contact_get_im_protocol(gcontact, j);
-
-							if (plugin_compare_protocols(protocol_id, protocol)) {
-								address = gcal_contact_get_im_address(gcontact, j);
-
-								if (strcmp(buddy_name, address) == 0) {
-									found_im = TRUE;
-									break;
-								}
+							if (strcmp(buddy_name, address) == 0) {
+								found_im = TRUE;
+								break;
 							}
 						}
+					}
 
-						if (!found_im) {
-#ifdef PLUGIN_DEBUG
-							int result, length;
-							char *xml_contact = NULL;
+					if (!found_im) {
+#if PLUGIN_DEBUG
+						int result, length;
+						char *xml_contact = NULL;
 #endif
 
-							purple_debug_info(PLUGIN_ID, "P2G: Add buddy %s to contact %s\n",
-								                         buddy_name, title);
+						purple_debug_info(PLUGIN_ID, "P2G: Add buddy %s to contact %s\n",
+													 buddy_name, buddy_alias);
 
-#ifdef PLUGIN_DEBUG
+#if PLUGIN_DEBUG
+						result = xmlcontact_create(gcontact, &xml_contact, &length);
+						if (result == 0 && xml_contact) {
+							purple_debug_misc(PLUGIN_ID, "P2G: Original contact XML:\n%s\n", xml_contact);
+							free(xml_contact);
+						}
+#endif
+
+						if (plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id, buddy_name), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
+							plugin_cleanup_contact_data(gcontact);
+
+#if PLUGIN_DEBUG
 							result = xmlcontact_create(gcontact, &xml_contact, &length);
 							if (result == 0 && xml_contact) {
-								purple_debug_misc(PLUGIN_ID, "P2G: Original contact XML:\n%s\n", xml_contact);
+								purple_debug_misc(PLUGIN_ID, "P2G: Updated contact XML:\n%s\n", xml_contact);
 								free(xml_contact);
 							}
 #endif
 
-							if (plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
-								plugin_cleanup_contact_data(gcontact);
-
-#ifdef PLUGIN_DEBUG
-								result = xmlcontact_create(gcontact, &xml_contact, &length);
-								if (result == 0 && xml_contact) {
-									purple_debug_misc(PLUGIN_ID, "P2G: Updated contact XML:\n%s\n", xml_contact);
-									free(xml_contact);
-								}
-#endif
-
-								plugin_check_gcal(gcal_update_contact(gcontactsync_gcal, gcontact), "gcal_update_contact");
-							}
+							plugin_check_gcal(gcal_update_contact(gcontactsync_gcal, gcontact), "gcal_update_contact");
 						}
-
-						break;
 					}
 				}
 			}
@@ -188,12 +172,29 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 	}
 }
 
+static GHashTable* plugin_build_gcontact_hashtable(struct gcal_contact_array gcontacts) {
+	GHashTable *ht_gcontacts = NULL;
+	gcal_contact_t gcontact;
+	int i;
+
+	ht_gcontacts = g_hash_table_new(&g_str_hash, &g_str_equal);
+	if (ht_gcontacts) {
+		for (i = 0; i < gcontacts.length; ++i) {
+			gcontact = gcal_contact_element(&gcontacts, i);
+			if (!gcontact)
+				break;
+
+			g_hash_table_insert(ht_gcontacts, gcal_contact_get_title(gcontact), gcontact);
+		}
+	}
+
+	return ht_gcontacts;
+}
+
 void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
 	char *username = NULL, *password = NULL;
-    GHashTable *htcontacts = NULL;
-	gcal_contact_t gcontact;
+    GHashTable *ht_gcontacts = NULL;
 	struct gcal_contact_array gcontacts;
-	int i;
 
 	username = strdup(purple_prefs_get_string(PLUGIN_PREF_USERNAME));
 	password = strdup(purple_prefs_get_string(PLUGIN_PREF_PASSWORD));
@@ -202,28 +203,19 @@ void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
 		purple_debug_misc(PLUGIN_ID, "username: %s\tpassword length: %d\n",
 		                  username, (int)strlen(password));
 
-		htcontacts = g_hash_table_new(&g_str_hash, &g_str_equal);
-		if (htcontacts) {
-			purple_debug_misc(PLUGIN_ID, "GHashTable created\n");
+		if (plugin_check_gcal(gcal_get_authentication(gcontactsync_gcal, username, password), "gcal_get_authentication")) {
+			if (plugin_check_gcal(gcal_get_contacts(gcontactsync_gcal, &gcontacts), "gcal_get_contacts")) {
 
-			if (plugin_check_gcal(gcal_get_authentication(gcontactsync_gcal, username, password), "gcal_get_authentication")) {
-				if (plugin_check_gcal(gcal_get_contacts(gcontactsync_gcal, &gcontacts), "gcal_get_contacts")) {
-					for (i = 0; i < gcontacts.length; ++i) {
-						gcontact = gcal_contact_element(&gcontacts, i);
-						if (!gcontact)
-							break;
+				ht_gcontacts = plugin_build_gcontact_hashtable(gcontacts);
+				if (ht_gcontacts) {
+					plugin_sync_from_google_to_pidgin(gcontacts);
+					plugin_sync_from_pidgin_to_google(ht_gcontacts);
 
-						g_hash_table_insert(htcontacts, gcal_contact_get_title(gcontact), gcontact);
-					}
-
-					plugin_sync_from_google_to_pidgin(gcontacts, htcontacts);
-					plugin_sync_from_pidgin_to_google(gcontacts, htcontacts);
-
-					gcal_cleanup_contacts(&gcontacts);
+					g_hash_table_destroy(ht_gcontacts);
 				}
-			}
 
-			g_hash_table_destroy(htcontacts);
+				gcal_cleanup_contacts(&gcontacts);
+			}
 		}
 	}
 
