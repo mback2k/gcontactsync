@@ -86,6 +86,10 @@ WIN32_LIBGCAL_SOURCES = \
 	$(LIBGCAL_DIR)/src/xml_aux.c
 
 GCONTACTSYNC_SOURCES = \
+	inc/gcontactsync.h \
+	inc/gcontactsync_gcal.h \
+	inc/gcontactsync_hacks.h \
+	inc/gcontactsync_sync.h \
 	src/gcontactsync.c \
 	src/gcontactsync_gcal.c \
 	src/gcontactsync_hacks.c \
