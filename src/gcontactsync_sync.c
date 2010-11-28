@@ -19,126 +19,7 @@
  * 02111-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#ifndef PURPLE_PLUGINS
-# define PURPLE_PLUGINS
-#endif
-
-#include <glib.h>
-#include <string.h>
-
-#include <curl/curl.h>
-
-#include <internal_gcal.h>
-#include <gcal_parser.h>
-#include <gcal_status.h>
-#include <gcalendar.h>
-#include <gcontact.h>
-
-#include <purple.h>
-
-#define PLUGIN_ID "core-mback2k-gcontactsync"
-#define PLUGIN_AUTHOR "Marc Hörsken <info@marc-hoersken.de>"
-//#define PLUGIN_DEBUG
-
-PurplePlugin *gcontactsync_plugin = NULL;
-gcal_t gcontactsync_gcal = NULL;
-
-static gboolean plugin_check_gcal(int result, const char* function) {
-	purple_debug_misc(PLUGIN_ID, "%s result = %d\n", function, result);	
-	if (result != 0) {
-		if (gcontactsync_gcal) {
-			purple_debug_error(PLUGIN_ID, "%s: %d\n%s\n", function, gcal_status_httpcode(gcontactsync_gcal), gcal_status_msg(gcontactsync_gcal));
-		}
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean plugin_check_protocol(const char* protocol_id) {
-	return (strcmp(protocol_id, "prpl-aim") == 0)
-	    || (strcmp(protocol_id, "prpl-msn") == 0)
-	    || (strcmp(protocol_id, "prpl-yahoo") == 0)
-	    || (strcmp(protocol_id, "prpl-qq") == 0)
-	    || (strcmp(protocol_id, "prpl-icq") == 0)
-	    || (strcmp(protocol_id, "prpl-jabber") == 0);
-}
-
-static gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol) {
-	return ((strcmp(protocol_id, "prpl-aim") == 0) && (strcmp(protocol, "AIM") == 0))
-	    || ((strcmp(protocol_id, "prpl-msn") == 0) && (strcmp(protocol, "MSN") == 0))
-	    || ((strcmp(protocol_id, "prpl-yahoo") == 0) && (strcmp(protocol, "YAHOO") == 0))
-	    || ((strcmp(protocol_id, "prpl-qq") == 0) && (strcmp(protocol, "QQ") == 0))
-	    || ((strcmp(protocol_id, "prpl-icq") == 0) && (strcmp(protocol, "ICQ") == 0))
-	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "JABBER") == 0))
-	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "GOOGLE_TALK") == 0));
-}
-
-static const char* plugin_get_protocol(const char* protocol_id) {
-	if (strcmp(protocol_id, "prpl-aim") == 0)
-		return "AIM";
-
-	if (strcmp(protocol_id, "prpl-msn") == 0)
-		return "MSN";
-
-	if (strcmp(protocol_id, "prpl-yahoo") == 0)
-		return "YAHOO";
-
-	if (strcmp(protocol_id, "prpl-qq") == 0)
-		return "QQ";
-
-	if (strcmp(protocol_id, "prpl-icq") == 0)
-		return "ICQ";
-
-	if (strcmp(protocol_id, "prpl-jabber") == 0)
-		return "JABBER";
-
-	return NULL;
-}
-
-// WORKAROUND: Need to set the CA PATH on Windows
-static void plugin_set_curl_capath(struct gcal_resource *gcal_data) {
-	curl_easy_setopt(gcal_data->curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-}
-
-// WORKAROUND: Empty fields are not allow in the update, need to set all empty strings to NULL
-static void plugin_cleanup_contact_data(struct gcal_contact *gcontact_data) {
-	if (!gcontact_data)
-		return;
-	
-	if (gcontact_data->nickname && !strlen(gcontact_data->nickname)) {
-		free(gcontact_data->nickname);
-		gcontact_data->nickname = NULL;
-	}
-
-	if (gcontact_data->homepage && !strlen(gcontact_data->homepage)) {
-		free(gcontact_data->homepage);
-		gcontact_data->homepage = NULL;
-	}
-
-	if (gcontact_data->blog && !strlen(gcontact_data->blog)) {
-		free(gcontact_data->blog);
-		gcontact_data->blog = NULL;
-	}
-
-	if (gcontact_data->occupation && !strlen(gcontact_data->occupation)) {
-		free(gcontact_data->occupation);
-		gcontact_data->occupation = NULL;
-	}
-
-	if (gcontact_data->post_address && !strlen(gcontact_data->post_address)) {
-		free(gcontact_data->post_address);
-		gcontact_data->post_address = NULL;
-	}
-
-	if (gcontact_data->birthday && !strlen(gcontact_data->birthday)) {
-		free(gcontact_data->birthday);
-		gcontact_data->birthday = NULL;
-	}
-}
+#include <gcontactsync_sync.h>
 
 static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontacts, GHashTable *htcontacts) {
 	char *title, *protocol, *address;
@@ -172,7 +53,7 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 					              gcal_contact_get_email(gcontact),
 					              gcal_contact_get_updated(gcontact));
 #endif
-				
+
 				for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
 					protocol = gcal_contact_get_im_protocol(gcontact, j);
 					address = gcal_contact_get_im_address(gcontact, j);
@@ -272,7 +153,7 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 							int result, length;
 							char *xml_contact = NULL;
 #endif
-							
+
 							purple_debug_info(PLUGIN_ID, "P2G: Add buddy %s to contact %s\n",
 								                         buddy_name, title);
 
@@ -283,7 +164,7 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 								free(xml_contact);
 							}
 #endif
-							
+
 							if (plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
 								plugin_cleanup_contact_data(gcontact);
 
@@ -307,15 +188,15 @@ static void plugin_sync_from_pidgin_to_google(struct gcal_contact_array gcontact
 	}
 }
 
-static void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
+void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
 	char *username = NULL, *password = NULL;
     GHashTable *htcontacts = NULL;
 	gcal_contact_t gcontact;
 	struct gcal_contact_array gcontacts;
 	int i;
 
-	username = strdup(purple_prefs_get_string("/plugins/core/mback2k/gcontactsync/username"));
-	password = strdup(purple_prefs_get_string("/plugins/core/mback2k/gcontactsync/password"));
+	username = strdup(purple_prefs_get_string(PLUGIN_PREF_USERNAME));
+	password = strdup(purple_prefs_get_string(PLUGIN_PREF_PASSWORD));
 
 	if (username && password) {
 		purple_debug_misc(PLUGIN_ID, "username: %s\tpassword length: %d\n",
@@ -353,104 +234,3 @@ static void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
 		free(password);
 }
 
-static GList* plugin_actions(PurplePlugin* plugin, gpointer context) {
-	GList *list = NULL;
-	PurplePluginAction *action = NULL;
-
-	action = purple_plugin_action_new("Google Contacts Sync", plugin_action_link_conctacts_cb);
-	list = g_list_append(list, action);
-
-	return list;
-}
-
-static gboolean plugin_load(PurplePlugin *plugin) {
-	gcontactsync_plugin = plugin;
-	gcontactsync_gcal = gcal_new(GCONTACT);
-
-	if (!gcontactsync_gcal)
-		return FALSE;
-
-	plugin_set_curl_capath(gcontactsync_gcal);
-
-	return TRUE;
-}
-
-static gboolean plugin_unload(PurplePlugin *plugin) {
-	gcal_delete(gcontactsync_gcal);
-	
-	gcontactsync_plugin = NULL;
-	gcontactsync_gcal = NULL;
-
-	return TRUE;
-}
-
-static void plugin_init(PurplePlugin *plugin) {
-	purple_prefs_add_none("/plugins/core/mback2k");
-	purple_prefs_add_none("/plugins/core/mback2k/gcontactsync");
-	purple_prefs_add_string("/plugins/core/mback2k/gcontactsync/username", "Username");
-	purple_prefs_add_string("/plugins/core/mback2k/gcontactsync/password", "Password");
-}
-
-static PurplePluginPrefFrame* plugin_pref_frame(PurplePlugin *plugin) {
-	PurplePluginPrefFrame *frame;
-	PurplePluginPref *ppref;
-
-	frame = purple_plugin_pref_frame_new();
-
-	ppref = purple_plugin_pref_new_with_label("Google Account");
-	purple_plugin_pref_frame_add(frame, ppref);
-
-	ppref = purple_plugin_pref_new_with_name_and_label("/plugins/core/mback2k/gcontactsync/username", "Username");
-	purple_plugin_pref_frame_add(frame, ppref);
-
-	ppref = purple_plugin_pref_new_with_name_and_label("/plugins/core/mback2k/gcontactsync/password", "Password");
-	purple_plugin_pref_set_masked(ppref, TRUE);
-	purple_plugin_pref_frame_add(frame, ppref);
-
-	return frame;
-}
-
-static PurplePluginUiInfo plugin_prefs = {
-	plugin_pref_frame,
-	0,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL
-};
-
-static PurplePluginInfo plugin_info = {
-	PURPLE_PLUGIN_MAGIC,
-	PURPLE_MAJOR_VERSION,
-	PURPLE_MINOR_VERSION,
-	PURPLE_PLUGIN_STANDARD,
-	NULL,
-	0,
-	NULL,
-	PURPLE_PRIORITY_DEFAULT,
-
-	PLUGIN_ID,
-	"Google Contact Sync",
-	"0.9",
-
-	"Synchronizes meta contacts with Google Contacts.",
-	"Synchronizes meta contacts with Google Contacts.",
-	PLUGIN_AUTHOR,
-	"http://www.marc-hoersken.de/",
-
-	plugin_load,
-	plugin_unload,
-	NULL,
-
-	NULL,
-	NULL,
-	&plugin_prefs,
-	plugin_actions,
-	NULL,
-	NULL,
-	NULL,
-	NULL
-};
-
-PURPLE_INIT_PLUGIN(gcontactsync, plugin_init, plugin_info)
