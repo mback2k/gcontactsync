@@ -23,7 +23,7 @@
 
 static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontacts) {
 	char *title, *protocol, *address;
-	const char *protocol_id, *alias;
+	const char *protocol_id, *alias, *server_alias;
 	GList *accounts = NULL;
 	PurpleAccount *account = NULL;
 	PurpleBuddy *buddy = NULL;
@@ -67,11 +67,19 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 						buddy = purple_find_buddy(account, address);
 						if (buddy) {
 							alias = purple_buddy_get_alias(buddy);
-							if (strcmp(title, alias) != 0) {
+							if (alias == NULL || strcmp(title, alias) != 0) {
 								purple_blist_alias_buddy(buddy, title);
 
-								purple_debug_info(PLUGIN_ID, "G2P: Alias buddy %s as contact %s\n",
+								purple_debug_info(PLUGIN_ID, "G2P: Local alias buddy %s as contact %s\n",
 								                  address, title);
+							}
+
+							server_alias = purple_buddy_get_server_alias(buddy);
+							if (server_alias != NULL && strcmp(title, server_alias) != 0) {
+								purple_blist_server_alias_buddy(buddy, title);
+
+								purple_debug_info(PLUGIN_ID, "G2P: Server alias buddy %s as contact %s\n",
+												  address, title);
 							}
 						}
 					}
