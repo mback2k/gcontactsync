@@ -95,14 +95,14 @@ GCONTACTSYNC_SOURCES = \
 	src/gcontactsync_hacks.c \
 	src/gcontactsync_sync.c
 
+LONG_BIT = $(shell getconf LONG_BIT)
 
 .PHONY:	all clean install
 
 all:	bin/gcontactsync32.so bin/gcontactsync64.so bin/gcontactsync.dll bin/libgcal.dll
 
-install:	bin/gcontactsync32.so bin/gcontactsync64.so
-	test   -d /usr/lib64 || cp bin/gcontactsync32.so /usr/local/lib/purple-2/gcontactsync.so
-	test ! -d /usr/lib64 || cp bin/gcontactsync64.so /usr/local/lib/purple-2/gcontactsync.so
+install:	bin/gcontactsync${LONG_BIT}.so
+	cp bin/gcontactsync${LONG_BIT}.so /usr/local/lib/purple-2/gcontactsync.so
 
 uninstall:
 	rm -f /usr/local/lib/purple-2/gcontactsync.so
