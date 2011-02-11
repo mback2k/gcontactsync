@@ -5,9 +5,9 @@ WIN32_WINDRES = i586-mingw32msvc-windres
 WIN32_OBJCOPY = i586-mingw32msvc-objcopy
 
 WIN32_DEV_DIR = /home/marc/Dokumente/win32-dev
-WIN32_PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.7
+WIN32_PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.10
 
-PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.7
+PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.10
 
 LIBGCAL_DIR = dep/libgcal-0.9.6
 LIBCURL_DIR = dep/curl-7.21.2
@@ -27,9 +27,8 @@ LINUX_CFLAGS = \
 	-I/usr/local/include/libpurple \
 	-I/usr/include/libxml2 \
 	-I/usr/local/include/libxml2 \
-	-I/usr/include/libgcal \
-	-I/usr/local/include/libgcal \
 	-I$(LIBCURL_DIR)/include \
+	-I$(LIBGCAL_DIR)/inc \
 	-Iinc
 
 LINUX_LIBS = \
@@ -38,8 +37,8 @@ LINUX_LIBS = \
 
 WIN32_CFLAGS = \
 	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/include/glib-2.0 \
-	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/include \
 	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/lib/glib-2.0/include \
+	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/include \
 	-I${WIN32_PIDGIN_DIR}/libpurple/win32 \
 	-I${WIN32_PIDGIN_DIR}/libpurple \
 	-I${WIN32_DEV_DIR}/libxml2-2.7.4/include/libxml2 \
