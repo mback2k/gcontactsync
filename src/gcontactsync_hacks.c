@@ -30,7 +30,7 @@ void plugin_set_curl_ssl_verifypeer(struct gcal_resource *gcal_data) {
 #endif
 }
 
-// WORKAROUND: Empty fields are not allow in the update, need to set all empty strings to NULL
+// WORKAROUND: Empty fields are not allowed in the update, need to set all empty strings to NULL
 void plugin_cleanup_contact_data(struct gcal_contact *gcontact_data) {
 	if (!gcontact_data)
 		return;

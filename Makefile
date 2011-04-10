@@ -4,12 +4,12 @@ WIN32_COMPILER = i586-mingw32msvc-gcc
 WIN32_WINDRES = i586-mingw32msvc-windres
 WIN32_OBJCOPY = i586-mingw32msvc-objcopy
 
-WIN32_DEV_DIR = /home/marc/Dokumente/win32-dev
-WIN32_PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.10
+WIN32_DEV_DIR = /home/marc/dev/win32-dev
+WIN32_PIDGIN_DIR = /home/marc/dev/pidgin-2.7.10
 
-PIDGIN_DIR = /home/marc/Dokumente/pidgin-2.7.10
+PIDGIN_DIR = /home/marc/dev/pidgin-2.7.10
 
-LIBGCAL_DIR = dep/libgcal-0.9.6
+LIBGCAL_DIR = /home/marc/dev/libgcal
 LIBCURL_DIR = dep/curl-7.21.2
 
 LIBPURPLE_CFLAGS = \

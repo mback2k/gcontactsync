@@ -53,7 +53,6 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 					              gcal_contact_get_email(gcontact),
 					              gcal_contact_get_updated(gcontact));
 #endif
-
 				for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
 					protocol = gcal_contact_get_im_protocol(gcontact, j);
 					address = gcal_contact_get_im_address(gcontact, j);
@@ -201,7 +200,7 @@ static GHashTable* plugin_build_gcontact_hashtable(struct gcal_contact_array gco
 
 void plugin_action_link_conctacts_cb(PurplePluginAction *action) {
 	char *username = NULL, *password = NULL;
-    GHashTable *ht_gcontacts = NULL;
+	GHashTable *ht_gcontacts = NULL;
 	struct gcal_contact_array gcontacts;
 
 	username = strdup(purple_prefs_get_string(PLUGIN_PREF_USERNAME));
