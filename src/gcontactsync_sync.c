@@ -144,7 +144,7 @@ static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
 
 					if (!found_im) {
 #if PLUGIN_DEBUG
-						int result, length;
+						int result, length, index;
 						char *xml_contact = NULL;
 #endif
 
@@ -159,19 +159,33 @@ static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
 						}
 #endif
 
-						if (plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id, buddy_name), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
-							plugin_cleanup_contact_data(gcontact);
+						if (!plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id, buddy_name), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
+							continue;
+						}
+
+						index = gcal_contact_get_im_count(gcontact) - 1;
+
+						if (strcmp(protocol_id, "prpl-jabber") == 0) {
+							if (strstr(buddy_name, "@chat.facebook.com")) {
+								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "Facebook"), "gcal_contact_set_im_label");
+							} else if (strstr(buddy_name, "@vz.net")) {
+								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "StudiVZ"), "gcal_contact_set_im_label");
+							} else if (strstr(buddy_name, "@schuelervz.net")) {
+								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "SchuelerVZ"), "gcal_contact_set_im_label");
+							}
+						}
+
+						plugin_cleanup_contact_data(gcontact);
 
 #if PLUGIN_DEBUG
-							result = xmlcontact_create(gcontact, &xml_contact, &length);
-							if (result == 0 && xml_contact) {
-								purple_debug_misc(PLUGIN_ID, "P2G: Updated contact XML:\n%s\n", xml_contact);
-								free(xml_contact);
-							}
+						result = xmlcontact_create(gcontact, &xml_contact, &length);
+						if (result == 0 && xml_contact) {
+							purple_debug_misc(PLUGIN_ID, "P2G: Updated contact XML:\n%s\n", xml_contact);
+							free(xml_contact);
+						}
 #endif
 
-							plugin_check_gcal(gcal_update_contact(gcontactsync_gcal, gcontact), "gcal_update_contact");
-						}
+						plugin_check_gcal(gcal_update_contact(gcontactsync_gcal, gcontact), "gcal_update_contact");
 					}
 				}
 			}

@@ -29,6 +29,11 @@
 
 #include <internal_gcal.h>
 
+#include <gcontactsync.h>
+
+// WORKAROUND: Forward curl debug logging to Pidgin debug window
+void plugin_set_curl_debug_callback(struct gcal_resource *gcal_data);
+
 // WORKAROUND: Need to disable the curl SSL peer verification on Windows
 void plugin_set_curl_ssl_verifypeer(struct gcal_resource *gcal_data);
 

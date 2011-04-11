@@ -5,12 +5,12 @@ WIN32_WINDRES = i586-mingw32msvc-windres
 WIN32_OBJCOPY = i586-mingw32msvc-objcopy
 
 WIN32_DEV_DIR = /home/marc/dev/win32-dev
-WIN32_PIDGIN_DIR = /home/marc/dev/pidgin-2.7.10
+WIN32_PIDGIN_DIR = /home/marc/dev/pidgin-2.7.11
 
-PIDGIN_DIR = /home/marc/dev/pidgin-2.7.10
+PIDGIN_DIR = /home/marc/dev/pidgin-2.7.11
 
 LIBGCAL_DIR = /home/marc/dev/libgcal
-LIBCURL_DIR = dep/curl-7.21.2
+LIBCURL_DIR = /home/marc/dev/curl
 
 LIBPURPLE_CFLAGS = \
 	-DPURPLE_PLUGINS \
@@ -50,7 +50,7 @@ WIN32_CFLAGS = \
 WIN32_LIBS = \
 	-L${WIN32_DEV_DIR}/gtk_2_0-2.14/bin \
 	-L${WIN32_PIDGIN_DIR}/libpurple \
-	-Llib \
+	-L$(LIBCURL_DIR) \
 	-Lbin \
 	-llibglib-2.0-0 \
 	-lpurple \
@@ -69,7 +69,7 @@ WIN32_LIBGCAL_CFLAGS = \
 WIN32_LIBGCAL_LIBS = \
 	-L${WIN32_DEV_DIR}/gtk_2_0-2.14/bin \
 	-L${WIN32_DEV_DIR}/libxml2-2.7.4/bin \
-	-Llib \
+	-L$(LIBCURL_DIR) \
 	-llibglib-2.0-0 \
 	-lxml2-2 \
 	-llibcurl
@@ -85,10 +85,6 @@ WIN32_LIBGCAL_SOURCES = \
 	$(LIBGCAL_DIR)/src/xml_aux.c
 
 GCONTACTSYNC_SOURCES = \
-	inc/gcontactsync.h \
-	inc/gcontactsync_gcal.h \
-	inc/gcontactsync_hacks.h \
-	inc/gcontactsync_sync.h \
 	src/gcontactsync.c \
 	src/gcontactsync_gcal.c \
 	src/gcontactsync_hacks.c \

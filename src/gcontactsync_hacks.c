@@ -21,10 +21,37 @@
 
 #include <gcontactsync_hacks.h>
 
+int plugin_curl_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
+	char *text;
+
+	if (type != CURLINFO_TEXT)
+		return 0;
+
+	text = strdup(data);
+	if (!text)
+		return 0;
+
+	if (strlen(text) >= size) {
+		text[size] = '\0';
+		purple_debug_misc("libcurl", "%s", text);
+	}
+
+	free(text);
+
+	return 0;	
+}
+
+// WORKAROUND: Forward curl debug logging to Pidgin debug window
+void plugin_set_curl_debug_callback(struct gcal_resource *gcal_data) {
+	curl_easy_setopt(gcal_data->curl, CURLOPT_DEBUGFUNCTION, &plugin_curl_debug_callback);
+	curl_easy_setopt(gcal_data->curl, CURLOPT_VERBOSE, 1);
+}
+
 // WORKAROUND: Need to disable the curl SSL peer verification on Windows
 void plugin_set_curl_ssl_verifypeer(struct gcal_resource *gcal_data) {
+	curl_easy_setopt(gcal_data->curl, CURLOPT_CAPATH, "C:/Program Files (x86)/Pidgin/ca-certs/");
 #ifdef WIN32
-	curl_easy_setopt(gcal_data->curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+	curl_easy_setopt(gcal_data->curl, CURLOPT_SSL_VERIFYPEER, TRUE);
 #else
 	curl_easy_setopt(gcal_data->curl, CURLOPT_SSL_VERIFYPEER, TRUE);
 #endif
