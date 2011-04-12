@@ -30,8 +30,8 @@
 #include <gcontact.h>
 
 #include <gcontactsync.h>
+#include <gcontactsync_debug.h>
 #include <gcontactsync_gcal.h>
-#include <gcontactsync_hacks.h>
 
 void plugin_action_link_conctacts_cb(PurplePluginAction *action);
 

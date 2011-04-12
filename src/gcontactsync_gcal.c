@@ -23,13 +23,14 @@
 
 gboolean plugin_check_gcal(int result, const char* function) {
 	purple_debug_misc(PLUGIN_ID, "%s result = %d\n", function, result);
-	if (result != 0) {
-		if (gcontactsync_gcal) {
-			purple_debug_error(PLUGIN_ID, "%s: %d\n%s\n", function, gcal_status_httpcode(gcontactsync_gcal), gcal_status_msg(gcontactsync_gcal));
-		}
-		return FALSE;
-	}
-	return TRUE;
+
+	if (result == 0)
+		return TRUE;
+
+	if (gcontactsync_gcal)
+		purple_debug_error(PLUGIN_ID, "%s: %d\n%s\n", function, gcal_status_httpcode(gcontactsync_gcal), gcal_status_msg(gcontactsync_gcal));
+
+	return FALSE;
 }
 
 gboolean plugin_check_protocol(const char* protocol_id) {
@@ -41,14 +42,17 @@ gboolean plugin_check_protocol(const char* protocol_id) {
 	    || (strcmp(protocol_id, "prpl-jabber") == 0);
 }
 
-gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol) {
+gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol, const char* label) {
 	return ((strcmp(protocol_id, "prpl-aim") == 0) && (strcmp(protocol, "AIM") == 0))
 	    || ((strcmp(protocol_id, "prpl-msn") == 0) && (strcmp(protocol, "MSN") == 0))
 	    || ((strcmp(protocol_id, "prpl-yahoo") == 0) && (strcmp(protocol, "YAHOO") == 0))
 	    || ((strcmp(protocol_id, "prpl-qq") == 0) && (strcmp(protocol, "QQ") == 0))
 	    || ((strcmp(protocol_id, "prpl-icq") == 0) && (strcmp(protocol, "ICQ") == 0))
 	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "JABBER") == 0))
-	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "GOOGLE_TALK") == 0));
+	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(protocol, "GOOGLE_TALK") == 0))
+	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(label, "Facebook") == 0))
+	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(label, "StudiVZ") == 0))
+	    || ((strcmp(protocol_id, "prpl-jabber") == 0) && (strcmp(label, "SchuelerVZ") == 0));
 }
 
 const char* plugin_get_protocol(const char* protocol_id, const char* buddy_name) {
@@ -75,3 +79,19 @@ const char* plugin_get_protocol(const char* protocol_id, const char* buddy_name)
 
 	return NULL;
 }
+
+const char* plugin_get_label(const char* protocol_id, const char* buddy_name) {
+	if (strcmp(protocol_id, "prpl-jabber") == 0) {
+		if (strstr(buddy_name, "@chat.facebook.com"))
+			return "Facebook";
+
+		if (strstr(buddy_name, "@vz.net"))
+			return "StudiVZ";
+
+		if (strstr(buddy_name, "@schuelervz.net"))
+			return "SchuelerVZ";
+	}
+
+	return NULL;
+}
+

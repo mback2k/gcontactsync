@@ -41,8 +41,12 @@ static gboolean plugin_load(PurplePlugin *plugin) {
 	if (!gcontactsync_gcal)
 		return FALSE;
 
-	plugin_set_curl_debug_callback(gcontactsync_gcal);
-	plugin_set_curl_ssl_verifypeer(gcontactsync_gcal);
+	gcal_set_curl_debug_callback(gcontactsync_gcal, plugin_curl_debug_callback);
+
+#ifdef WIN32
+	gcal_set_ca_info(gcontactsync_gcal, NULL);
+	gcal_set_ca_path(gcontactsync_gcal, "ca-certs");
+#endif
 
 	return TRUE;
 }

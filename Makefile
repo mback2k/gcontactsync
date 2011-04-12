@@ -32,7 +32,6 @@ LINUX_CFLAGS = \
 	-Iinc
 
 LINUX_LIBS = \
-	-lcurl \
 	-lgcal
 
 WIN32_CFLAGS = \
@@ -42,7 +41,7 @@ WIN32_CFLAGS = \
 	-I${WIN32_PIDGIN_DIR}/libpurple/win32 \
 	-I${WIN32_PIDGIN_DIR}/libpurple \
 	-I${WIN32_DEV_DIR}/libxml2-2.7.4/include/libxml2 \
-	-I$(LIBCURL_DIR)/include \
+        -I$(LIBCURL_DIR)/include \
 	-I$(LIBGCAL_DIR)/inc \
 	-Iinc \
 	-Wno-format
@@ -50,51 +49,22 @@ WIN32_CFLAGS = \
 WIN32_LIBS = \
 	-L${WIN32_DEV_DIR}/gtk_2_0-2.14/bin \
 	-L${WIN32_PIDGIN_DIR}/libpurple \
-	-L$(LIBCURL_DIR) \
-	-Lbin \
+	-L$(LIBGCAL_DIR)/bin \
 	-llibglib-2.0-0 \
 	-lpurple \
-	-llibcurl \
-	-llibgcal
-
-WIN32_LIBGCAL_CFLAGS = \
-	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/include/glib-2.0 \
-	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/include \
-	-I${WIN32_DEV_DIR}/gtk_2_0-2.14/lib/glib-2.0/include \
-	-I${WIN32_DEV_DIR}/libxml2-2.7.4/include/libxml2 \
-	-I$(LIBCURL_DIR)/include \
-	-I$(LIBGCAL_DIR)/inc \
-	-Wno-pointer-sign
-
-WIN32_LIBGCAL_LIBS = \
-	-L${WIN32_DEV_DIR}/gtk_2_0-2.14/bin \
-	-L${WIN32_DEV_DIR}/libxml2-2.7.4/bin \
-	-L$(LIBCURL_DIR) \
-	-llibglib-2.0-0 \
-	-lxml2-2 \
-	-llibcurl
-
-WIN32_LIBGCAL_SOURCES = \
-	$(LIBGCAL_DIR)/src/atom_parser.c \
-	$(LIBGCAL_DIR)/src/gcal.c \
-	$(LIBGCAL_DIR)/src/gcalendar.c \
-	$(LIBGCAL_DIR)/src/gcal_parser.c \
-	$(LIBGCAL_DIR)/src/gcal_status.c \
-	$(LIBGCAL_DIR)/src/gcontact.c \
-	$(LIBGCAL_DIR)/src/gcont.c \
-	$(LIBGCAL_DIR)/src/xml_aux.c
+	-llibgcal-0
 
 GCONTACTSYNC_SOURCES = \
 	src/gcontactsync.c \
+	src/gcontactsync_debug.c \
 	src/gcontactsync_gcal.c \
-	src/gcontactsync_hacks.c \
 	src/gcontactsync_sync.c
 
 LONG_BIT = $(shell getconf LONG_BIT)
 
 .PHONY:	all clean install
 
-all:	bin/gcontactsync32.so bin/gcontactsync64.so bin/gcontactsync.dll bin/libgcal.dll
+all:	bin/gcontactsync32.so bin/gcontactsync64.so bin/gcontactsync.dll
 
 install:	bin/gcontactsync${LONG_BIT}.so
 	cp bin/gcontactsync${LONG_BIT}.so /usr/local/lib/purple-2/gcontactsync.so
@@ -103,7 +73,7 @@ uninstall:
 	rm -f /usr/local/lib/purple-2/gcontactsync.so
 
 clean:
-	rm -f bin/gcontactsync32.so bin/gcontactsync64.so bin/gcontactsync.dll bin/gcontactsync.res bin/libgcal.dll bin/libgcal.res
+	rm -f bin/gcontactsync32.so bin/gcontactsync64.so bin/gcontactsync.dll bin/gcontactsync.res
 
 
 bin/gcontactsync32.so:	${GCONTACTSYNC_SOURCES}
@@ -115,7 +85,7 @@ bin/gcontactsync64.so:	${GCONTACTSYNC_SOURCES}
 bin/gcontactsync.res:	src/gcontactsync.rc
 	${WIN32_WINDRES} $< -O coff -o $@
 
-bin/gcontactsync.dll:	${GCONTACTSYNC_SOURCES} bin/gcontactsync.res bin/libgcal.dll
+bin/gcontactsync.dll:	${GCONTACTSYNC_SOURCES} bin/gcontactsync.res
 	${WIN32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -I. -g -O2 -pipe ${GCONTACTSYNC_SOURCES} bin/gcontactsync.res -o $@ -shared -mno-cygwin ${WIN32_CFLAGS} ${WIN32_LIBS}
 	${WIN32_OBJCOPY} --only-keep-debug $@ $@.dbg
 	${WIN32_OBJCOPY} --strip-debug $@
@@ -123,16 +93,4 @@ bin/gcontactsync.dll:	${GCONTACTSYNC_SOURCES} bin/gcontactsync.res bin/libgcal.d
 
 bin/gcontactsync-debug.dll:	${GCONTACTSYNC_SOURCES} bin/gcontactsync.res
 	${WIN32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -I. -g -O2 -pipe ${GCONTACTSYNC_SOURCES} ${WIN32_SOURCES} bin/gcontactsync.res -o $@ -shared -mno-cygwin ${WIN32_CFLAGS} ${WIN32_LIBS}
-
-bin/libgcal.res:		src/libgcal.rc
-	${WIN32_WINDRES} $< -O coff -o $@
-
-bin/libgcal.dll:		$(WIN32_LIBGCAL_SOURCES) bin/libgcal.res
-	${WIN32_COMPILER} -Wall -I. -g -O2 -pipe ${WIN32_LIBGCAL_SOURCES} bin/libgcal.res -o $@ -shared -mno-cygwin ${WIN32_LIBGCAL_CFLAGS} ${WIN32_LIBGCAL_LIBS}
-	${WIN32_OBJCOPY} --only-keep-debug $@ $@.dbg
-	${WIN32_OBJCOPY} --strip-debug $@
-	${WIN32_OBJCOPY} --add-gnu-debuglink=$@.dbg $@
-
-bin/libgcal-debug.dll:	$(WIN32_LIBGCAL_SOURCES) bin/libgcal.res
-	${WIN32_COMPILER} -Wall -I. -g -O2 -pipe ${WIN32_LIBGCAL_SOURCES} bin/libgcal.res -o $@ -shared -mno-cygwin ${WIN32_LIBGCAL_CFLAGS} ${WIN32_LIBGCAL_LIBS}
 

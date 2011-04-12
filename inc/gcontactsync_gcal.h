@@ -32,7 +32,8 @@
 
 gboolean plugin_check_gcal(int result, const char* function);
 gboolean plugin_check_protocol(const char* protocol_id);
-gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol);
+gboolean plugin_compare_protocols(const char* protocol_id, const char* protocol, const char* label);
 const char* plugin_get_protocol(const char* protocol_id, const char* buddy_name);
+const char* plugin_get_label(const char* protocol_id, const char* buddy_name);
 
 #endif /* GCONTACTSYNC_GCAL_H_ */

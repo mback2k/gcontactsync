@@ -22,8 +22,8 @@
 #include <gcontactsync_sync.h>
 
 static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontacts) {
+	const char *protocol_id, *alias, *server_alias, *label;
 	char *title, *protocol, *address;
-	const char *protocol_id, *alias, *server_alias;
 	GList *accounts = NULL;
 	PurpleAccount *account = NULL;
 	PurpleBuddy *buddy = NULL;
@@ -55,6 +55,7 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 #endif
 				for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
 					protocol = gcal_contact_get_im_protocol(gcontact, j);
+					label = gcal_contact_get_im_label(gcontact, j);
 					address = gcal_contact_get_im_address(gcontact, j);
 
 #if PLUGIN_DEBUG
@@ -62,7 +63,7 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 						              j, protocol, address);
 #endif
 
-					if (plugin_compare_protocols(protocol_id, protocol)) {
+					if (plugin_compare_protocols(protocol_id, protocol, label)) {
 						buddy = purple_find_buddy(account, address);
 						if (buddy) {
 							alias = purple_buddy_get_alias(buddy);
@@ -89,15 +90,15 @@ static void plugin_sync_from_google_to_pidgin(struct gcal_contact_array gcontact
 }
 
 static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
+	const char *protocol_id, *buddy_name, *buddy_alias, *label;
 	char *protocol, *address;
-	const char *protocol_id, *buddy_name, *buddy_alias;
 	GList *accounts = NULL;
 	PurpleAccount *account = NULL;
 	GSList *buddies = NULL;
 	PurpleBuddy *buddy = NULL;
 	gboolean found_im = FALSE;
 	gcal_contact_t gcontact;
-	int j;
+	int i;
 
 	for (accounts = purple_accounts_get_all(); accounts != NULL; accounts = accounts->next) {
 		account = (PurpleAccount*)accounts->data;
@@ -129,11 +130,12 @@ static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
 									  buddy_name, buddy_alias);
 #endif
 
-					for (j = 0; j < gcal_contact_get_im_count(gcontact); j++) {
-						protocol = gcal_contact_get_im_protocol(gcontact, j);
-
-						if (plugin_compare_protocols(protocol_id, protocol)) {
-							address = gcal_contact_get_im_address(gcontact, j);
+					for (i = 0; i < gcal_contact_get_im_count(gcontact); i++) {
+						protocol = gcal_contact_get_im_protocol(gcontact, i);
+						label = gcal_contact_get_im_label(gcontact, i);
+						
+						if (plugin_compare_protocols(protocol_id, protocol, label)) {
+							address = gcal_contact_get_im_address(gcontact, i);
 
 							if (strcmp(buddy_name, address) == 0) {
 								found_im = TRUE;
@@ -142,9 +144,18 @@ static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
 						}
 					}
 
-					if (!found_im) {
+					if (found_im) {
+						if (strlen(gcal_contact_get_im_label(gcontact, i)))
+							continue;
+
+						label = plugin_get_label(protocol_id, buddy_name);
+						if (label) {
+							plugin_check_gcal(gcal_contact_set_im_label(gcontact, i, label), "gcal_contact_set_im_label");
+							plugin_check_gcal(gcal_update_contact(gcontactsync_gcal, gcontact), "gcal_update_contact");
+						}
+					} else {
 #if PLUGIN_DEBUG
-						int result, length, index;
+						int result, length;
 						char *xml_contact = NULL;
 #endif
 
@@ -159,23 +170,15 @@ static void plugin_sync_from_pidgin_to_google(GHashTable *ht_gcontacts) {
 						}
 #endif
 
+						i = gcal_contact_get_im_count(gcontact);
 						if (!plugin_check_gcal(gcal_contact_add_im(gcontact, plugin_get_protocol(protocol_id, buddy_name), buddy_name, I_OTHER, FALSE), "gcal_contact_add_im")) {
 							continue;
 						}
 
-						index = gcal_contact_get_im_count(gcontact) - 1;
-
-						if (strcmp(protocol_id, "prpl-jabber") == 0) {
-							if (strstr(buddy_name, "@chat.facebook.com")) {
-								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "Facebook"), "gcal_contact_set_im_label");
-							} else if (strstr(buddy_name, "@vz.net")) {
-								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "StudiVZ"), "gcal_contact_set_im_label");
-							} else if (strstr(buddy_name, "@schuelervz.net")) {
-								plugin_check_gcal(gcal_contact_set_im_label(gcontact, index, "SchuelerVZ"), "gcal_contact_set_im_label");
-							}
+						label = plugin_get_label(protocol_id, buddy_name);
+						if (label) {
+							plugin_check_gcal(gcal_contact_set_im_label(gcontact, i, label), "gcal_contact_set_im_label");
 						}
-
-						plugin_cleanup_contact_data(gcontact);
 
 #if PLUGIN_DEBUG
 						result = xmlcontact_create(gcontact, &xml_contact, &length);
