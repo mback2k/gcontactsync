@@ -19,25 +19,38 @@
  * 02111-1301, USA.
  */
 
-#ifndef GCONTACTSYNC_HACKS_H_
-#define GCONTACTSYNC_HACKS_H_
+#include <gcontactsync_debug.h>
 
-#include <string.h>
-#include <glib.h>
+static void plugin_debug_helper(const char *category, char *data, size_t size) {
+	char *text;
 
-#include <curl/curl.h>
+	text = strdup(data);
+	if (!text)
+		return;
 
-#include <internal_gcal.h>
+	if (strlen(text) >= size) {
+		if (text[size] != '\0')
+			text[size] = '\0';
+		if (text[size-1] == '\n')
+			purple_debug_misc(category, "%s", text);
+		else
+			purple_debug_misc(category, "%s\n", text);
+	}
 
-#include <gcontactsync.h>
+	free(text);
+}
 
-// WORKAROUND: Forward curl debug logging to Pidgin debug window
-void plugin_set_curl_debug_callback(struct gcal_resource *gcal_data);
+int plugin_gcal_debug_callback(void *handle, char *data, size_t size) {
+	plugin_debug_helper("gcal", data, size);
 
-// WORKAROUND: Need to disable the curl SSL peer verification on Windows
-void plugin_set_curl_ssl_verifypeer(struct gcal_resource *gcal_data);
+	return 0;
+}
 
-// WORKAROUND: Empty fields are not allow in the update, need to set all empty strings to NULL
-void plugin_cleanup_contact_data(struct gcal_contact *gcontact_data);
+int plugin_curl_debug_callback(void *handle, int type, char *data, size_t size, void *userptr) {
+	if (type)
+		return 0;
 
-#endif /* GCONTACTSYNC_HACKS_H_ */
+	plugin_debug_helper("curl", data, size);
+
+	return 0;
+}
