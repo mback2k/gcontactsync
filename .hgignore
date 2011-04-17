@@ -1,0 +1,20 @@
+syntax: glob
+
+autom4te.cache
+scripts
+config.*
+configure
+Makefile
+libtool
+stamp-*
+
+.deps
+.libs
+
+*.o
+*.a
+*.lo
+*.la
+*.in
+*.m4
+*~
