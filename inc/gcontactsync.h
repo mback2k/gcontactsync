@@ -26,10 +26,6 @@
 # include <config.h>
 #endif
 
-#ifndef PURPLE_PLUGINS
-# define PURPLE_PLUGINS
-#endif
-
 #include <string.h>
 #include <glib.h>
 
@@ -40,7 +36,7 @@
 
 #define PLUGIN_ID "core-mback2k-gcontactsync"
 #define PLUGIN_NAME "Google Contact Sync"
-#define PLUGIN_VERSION "0.9"
+#define PLUGIN_VERSION PACKAGE_VERSION
 #define PLUGIN_DESCRIPTION "Synchronizes meta contacts with Google Contacts."
 #define PLUGIN_AUTHOR "Marc Hörsken <info@marc-hoersken.de>"
 #define PLUGIN_WEBSITE "http://www.marc-hoersken.de/"

@@ -27,6 +27,10 @@
 
 #include <gcontactsync.h>
 
+#ifndef HAVE_STRNDUP
+#define strndup(s, n) strdup(s); if (strlen(s) >= n) s[n] = '\0';
+#endif
+
 int plugin_gcal_debug_callback(void *handle, char *data, size_t size);
 int plugin_curl_debug_callback(void *handle, int type, char *data, size_t size, void *userptr);
 

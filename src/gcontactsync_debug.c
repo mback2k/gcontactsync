@@ -24,18 +24,14 @@
 static void plugin_debug_helper(const char *category, char *data, size_t size) {
 	char *text;
 
-	text = strdup(data);
+	text = strndup(data, size);
 	if (!text)
 		return;
 
-	if (strlen(text) >= size) {
-		if (text[size] != '\0')
-			text[size] = '\0';
-		if (text[size-1] == '\n')
-			purple_debug_misc(category, "%s", text);
-		else
-			purple_debug_misc(category, "%s\n", text);
-	}
+	if (text[size-1] == '\n')
+		purple_debug_misc(category, "%s", text);
+	else
+		purple_debug_misc(category, "%s\n", text);
 
 	free(text);
 }

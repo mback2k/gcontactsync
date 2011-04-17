@@ -1,0 +1,24 @@
+if RC
+.rc.lo:
+	$(AM_V_GEN)$(LIBTOOL) --tag=RC --mode=compile $(RC) -J rc -O coff -i $< -o $@
+endif
+
+####################################################################################################
+
+ACLOCAL_AMFLAGS = -I m4
+
+lib_LTLIBRARIES = gcontactsync.la
+
+gcontactsync_la_SOURCES = inc/gcontactsync.h inc/gcontactsync_debug.h inc/gcontactsync_gcal.h inc/gcontactsync_sync.h \
+                          src/gcontactsync.c src/gcontactsync_debug.c src/gcontactsync_gcal.c src/gcontactsync_sync.c
+
+if RC
+gcontactsync_la_SOURCES += src/gcontactsync_res.rc
+endif
+
+gcontactsync_la_CFLAGS = -Iinc $(GLIB_CFLAGS) $(PURPLE_CFLAGS) $(LIBXML_CFLAGS) $(LIBCURL_CFLAGS) $(LIBGCAL_CFLAGS)
+gcontactsync_la_LIBADD = $(GLIB_LIBS) $(PURPLE_LIBS) $(LIBXML_LIBS) $(LIBCURL_LIBS) $(LIBGCAL_LIBS)
+gcontactsync_la_LDFLAGS = -module -avoid-version
+
+dist_noinst_DATA = src/gcontactsync_res.rc
+
