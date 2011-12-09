@@ -1,8 +1,19 @@
+autom4te.cache/
+scripts/
+
+config.*
+configure
+libtool
+Makefile
+stamp-*
+
 .deps
 .libs
 
 *~
-*.la
+*.a
+*.in
 *.lo
+*.la
 *.m4
 *.o
