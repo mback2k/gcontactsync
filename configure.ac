@@ -29,6 +29,11 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0],, \
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
+PKG_CHECK_MODULES([GTK], [gtk+-2.0],, \
+	AC_MSG_ERROR([*** gtk+2 not found! You need it to build $PACKAGE_NAME. ***]))
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
 PKG_CHECK_MODULES([PURPLE], [purple],, \
 	AC_MSG_ERROR([*** purple not found! You need it to build $PACKAGE_NAME. ***]))
 AC_SUBST(PURPLE_CFLAGS)

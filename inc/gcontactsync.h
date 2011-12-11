@@ -33,6 +33,7 @@
 #include <gcontact.h>
 
 #include <gcontactsync_sync.h>
+#include <gcontactsync_gui.h>
 
 #define PLUGIN_ID "core-mback2k-gcontactsync"
 #define PLUGIN_NAME "Google Contact Sync"

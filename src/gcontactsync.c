@@ -31,6 +31,9 @@ static GList* plugin_actions(PurplePlugin* plugin, gpointer context) {
 	action = purple_plugin_action_new("Sync all contacts", plugin_action_link_conctacts_cb);
 	list = g_list_append(list, action);
 
+	action = purple_plugin_action_new("GUI test", plugin_action_gui_test_cb);
+	list = g_list_append(list, action);
+
 	return list;
 }
 
