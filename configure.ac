@@ -7,7 +7,7 @@ AC_INIT([gcontactsync], [0.9], [info@marc-hoersken.de])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/gcontactsync.c])
 AC_CONFIG_AUX_DIR([scripts])
-AC_CONFIG_MACRO_DIR([m4])
+#AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
