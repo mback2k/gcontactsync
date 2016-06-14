@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR([src/gcontactsync.c])
 AC_CONFIG_AUX_DIR([scripts])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror subdir-objects])
 
 AC_LIBTOOL_WIN32_DLL
 
