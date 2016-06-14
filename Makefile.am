@@ -5,7 +5,7 @@ endif
 
 ####################################################################################################
 
-#ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = gcontactsync.la
 
