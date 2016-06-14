@@ -13,6 +13,7 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 AC_LIBTOOL_WIN32_DLL
 
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 LT_INIT
 LT_PROG_RC
 AM_CONDITIONAL([RC], test $RC)
